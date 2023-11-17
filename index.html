@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Diary</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+</head>
+<body>
+<header>
+  <h1>Электронный дневник</h1>
+</header>
+
+
+<section id="entryForm">
+  <h2>Добавить запись</h2>
+  <form id="diaryForm">
+    <label for="date">Дата:</label>
+    <input type="date" id="date" name="date" required>
+
+    <label for="entry">ДЗ:</label>
+    <textarea id="entry" name="entry" rows="4" required></textarea>
+
+    <button type="button" onclick="addEntry()">Добавить запись</button>
+  </form>
+</section>
+<center><button onclick="showDocumentation()">Документация</button></center>
+<section id="entries">
+  <h2>Домашние задание:</h2>
+  <ul id="entriesList"></ul>
+</section>
+<script src="script.js"></script>
+
+<script>
+  const socket = io();
+
+  // Получение всех записей при подключении
+  socket.on('entries', (entries) => {
+    displayEntries(entries);
+  });
+
+  // Добавление новой записи при получении события 'entryAdded'
+  socket.on('entryAdded', (entry) => {
+    appendEntry(entry);
+  });
+
+  // Удаление записи при получении события 'entryDeleted'
+  socket.on('entryDeleted', (id) => {
+    removeEntry(id);
+  });
+
+  function addEntry() {
+    const date = document.getElementById('date').value;
+    const entryText = document.getElementById('entry').value;
+
+    if (date && entryText) {
+      const entry = { date, entryText };
+
+      // Отправка события 'addEntry' на сервер
+      socket.emit('addEntry', entry);
+
+      // Очистка формы
+      document.getElementById('diaryForm').reset();
+    } else {
+      alert('Пожалуйста, заполните все поля.');
+    }
+  }
+
+  function displayEntries(entries) {
+    const entriesList = document.getElementById('entriesList');
+    entriesList.innerHTML = '';
+
+    entries.forEach((entry) => {
+      appendEntry(entry);
+    });
+  }
+
+  function appendEntry(entry) {
+    const entriesList = document.getElementById('entriesList');
+    const entryItem = document.createElement('li');
+    entryItem.innerHTML = `<strong>${entry.date}</strong>: ${entry.entryText} <button onclick="deleteEntry(${entry.id})">Удалить</button>`;
+    entriesList.appendChild(entryItem);
+  }
+
+  function deleteEntry(id) {
+    // Отправка события 'deleteEntry' на сервер
+    socket.emit('deleteEntry', id);
+  }
+
+  function removeEntry(id) {
+    const entryItem = document.querySelector(`#entriesList li[data-id="${id}"]`);
+    if (entryItem) {
+      entryItem.remove();
+    }
+  }
+</script>
+
+
+<script src="script.js"></script>
+<style>
+
+//
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+footer {
+    background-color: lightgray;
+    color: yellow;
+    text-align: center;
+    padding: 1em 0;
+}
+header {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 1em 0;
+}
+
+section {
+    margin: 20px;
+}
+
+form {
+    display: grid;
+    gap: 10px;
+}
+
+button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+#entriesList {
+    list-style: none;
+    padding: 0;
+}
+
+.entryItem {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.date {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.entryText {
+    white-space: pre-line;
+}
+
+</style>
+<footer>
+  <p>
+     <a href="index2.html">переходите на сайт 5-в</a>
+  </p>
+</footer>
+  </body>
+</html>
